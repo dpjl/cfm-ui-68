@@ -11,9 +11,10 @@ import GalleryToolbar from './GalleryToolbar';
 import { useGalleryMediaHandler } from '@/hooks/use-gallery-media-handler';
 import MediaInfoPanel from '../media/MediaInfoPanel';
 import { useIsMobile } from '@/hooks/use-breakpoint';
-import { MediaItem, GalleryViewMode } from '@/types/gallery';
+import { GalleryViewMode } from '@/types/gallery';
 import GalleryDateBanner from './GalleryDateBanner';
 import { useGalleryVisibleDate } from '@/hooks/use-gallery-visible-date';
+import GalleryTimeNavigation from './GalleryTimeNavigation';
 
 interface GalleryProps {
   title: string;
@@ -123,6 +124,8 @@ const Gallery: React.FC<GalleryProps> = ({
     return false;
   };
   
+  const shouldShowTimeNavigation = mediaIds.length > 20;
+  
   return (
     <div className="flex flex-col h-full relative" ref={containerRef}>
       <GalleryToolbar
@@ -172,6 +175,13 @@ const Gallery: React.FC<GalleryProps> = ({
             updateMediaInfo={updateMediaInfo}
             position={position}
             gap={gap}
+          />
+        )}
+        
+        {shouldShowTimeNavigation && mediaIds.length > 0 && (
+          <GalleryTimeNavigation 
+            mediaInfoMap={mediaInfoMap}
+            scrollElementRef={gridContainerRef}
           />
         )}
       </div>
