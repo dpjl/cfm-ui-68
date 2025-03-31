@@ -56,7 +56,7 @@ const GalleryDateBanner = memo(({
     <AnimatePresence>
       {showBanner && (
         <motion.div 
-          className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30"
+          className="absolute top-4 left-4 z-30"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}

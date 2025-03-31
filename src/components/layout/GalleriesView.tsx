@@ -39,7 +39,7 @@ const GalleriesView: React.FC<GalleriesViewProps> = ({
   const { getGalleryClasses, containerClasses, isGalleryVisible } = useGalleryLayout();
 
   return (
-    <div className={`${containerClasses} ${className}`}>
+    <div className={`${containerClasses} ${className} border-2 border-border/60`}>
       <div className="flex h-full">
         {/* Left Gallery - always mounted but conditionally visible */}
         <div className={getGalleryClasses('left')}>
@@ -55,7 +55,7 @@ const GalleriesView: React.FC<GalleriesViewProps> = ({
 
         {/* Gallery Separator - only shown in split view */}
         {viewMode === 'both' && (
-          <Separator orientation="vertical" className="bg-border/60" />
+          <Separator orientation="vertical" className="bg-primary/30 w-[3px]" />
         )}
 
         {/* Right Gallery - always mounted but conditionally visible */}
