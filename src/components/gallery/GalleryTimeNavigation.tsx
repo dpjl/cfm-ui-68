@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useIsMobile } from '@/hooks/use-breakpoint';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { DetailedMediaInfo } from '@/api/imageApi';
+import { DetailedMediaInfo, MediaItemWithDate } from '@/api/imageApi';
 
 interface MonthData {
   month: string; // Format: "2023-01"
@@ -18,24 +18,28 @@ interface MonthData {
 interface GalleryTimeNavigationProps {
   mediaInfoMap: Map<string, DetailedMediaInfo | null>;
   scrollElementRef: React.RefObject<HTMLElement>;
+  mediaItemsWithDates?: MediaItemWithDate[];
+  onNavigateToDate?: (date: string) => void;
 }
 
 const GalleryTimeNavigation: React.FC<GalleryTimeNavigationProps> = ({
   mediaInfoMap,
-  scrollElementRef
+  scrollElementRef,
+  mediaItemsWithDates = [],
+  onNavigateToDate
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
   
-  // Générer une liste des mois disponibles à partir des données des médias
+  // Générer une liste des mois disponibles en utilisant à la fois mediaInfoMap et mediaItemsWithDates
   const monthsData = useMemo(() => {
     const months: Record<string, { count: number; dates: Date[] }> = {};
     
-    // Parcourir tous les médias pour extraire les dates
-    mediaInfoMap.forEach((info) => {
-      if (info?.createdAt) {
+    // Utiliser d'abord les données pré-chargées des mediaItemsWithDates
+    mediaItemsWithDates.forEach((item) => {
+      if (item.createdAt) {
         try {
-          const date = new Date(info.createdAt);
+          const date = new Date(item.createdAt);
           if (!isNaN(date.getTime())) {
             // Format: "2023-01"
             const monthKey = format(date, 'yyyy-MM');
@@ -51,7 +55,31 @@ const GalleryTimeNavigation: React.FC<GalleryTimeNavigationProps> = ({
             months[monthKey].dates.push(date);
           }
         } catch (error) {
-          console.error('Error parsing date:', error);
+          console.error('Error parsing date from mediaItemsWithDates:', error);
+        }
+      }
+    });
+    
+    // Compléter avec les données de mediaInfoMap pour assurer que nous n'avons rien manqué
+    mediaInfoMap.forEach((info) => {
+      if (info?.createdAt) {
+        try {
+          const date = new Date(info.createdAt);
+          if (!isNaN(date.getTime())) {
+            const monthKey = format(date, 'yyyy-MM');
+            
+            if (!months[monthKey]) {
+              months[monthKey] = {
+                count: 0,
+                dates: []
+              };
+            }
+            
+            months[monthKey].count += 1;
+            months[monthKey].dates.push(date);
+          }
+        } catch (error) {
+          console.error('Error parsing date from mediaInfoMap:', error);
         }
       }
     });
@@ -64,13 +92,25 @@ const GalleryTimeNavigation: React.FC<GalleryTimeNavigationProps> = ({
         count: data.count
       }))
       .sort((a, b) => b.month.localeCompare(a.month));
-  }, [mediaInfoMap]);
+  }, [mediaInfoMap, mediaItemsWithDates]);
   
   // Scroll vers une date spécifique
   const scrollToMonth = useCallback((monthKey: string) => {
-    if (!scrollElementRef.current || !mediaInfoMap.size) return;
+    if (!scrollElementRef.current) return;
     
-    // Convertir la clé de mois en Date (débuter au 1er jour du mois)
+    // Si onNavigateToDate est fourni, utiliser cette fonction
+    if (onNavigateToDate) {
+      // Convertir la clé de mois en Date (milieu du mois pour un meilleur ciblage)
+      const targetDate = parse(monthKey + '-15', 'yyyy-MM-dd', new Date());
+      onNavigateToDate(targetDate.toISOString());
+      setIsOpen(false);
+      return;
+    }
+    
+    // Sinon, utiliser l'ancienne méthode
+    if (!mediaInfoMap.size) return;
+    
+    // Convertir la clé de mois en Date
     const targetDate = parse(monthKey, 'yyyy-MM', new Date());
     const startDate = startOfMonth(targetDate);
     const endDate = endOfMonth(targetDate);
@@ -79,25 +119,52 @@ const GalleryTimeNavigation: React.FC<GalleryTimeNavigationProps> = ({
     const mediaElements = scrollElementRef.current.querySelectorAll('[data-media-id]');
     let targetElement: Element | null = null;
     
+    // Créer une map temporaire des IDs aux dates
+    const idToDateMap = new Map<string, Date>();
+    
+    // Remplir avec les dates de mediaItemsWithDates pour une recherche plus rapide
+    mediaItemsWithDates.forEach(item => {
+      if (item.createdAt) {
+        try {
+          const date = new Date(item.createdAt);
+          if (!isNaN(date.getTime())) {
+            idToDateMap.set(item.id, date);
+          }
+        } catch (error) {
+          console.error('Error checking date from mediaItemsWithDates:', error);
+        }
+      }
+    });
+    
     // Parcourir tous les éléments médias
     for (let i = 0; i < mediaElements.length; i++) {
       const element = mediaElements[i];
       const mediaId = element.getAttribute('data-media-id');
       
       if (mediaId) {
-        const mediaInfo = mediaInfoMap.get(mediaId);
-        if (mediaInfo?.createdAt) {
-          try {
-            const date = new Date(mediaInfo.createdAt);
-            if (!isNaN(date.getTime())) {
-              // Vérifier si la date est dans le mois cible
-              if (date >= startDate && date <= endDate) {
-                targetElement = element;
-                break;
+        // Vérifier d'abord dans la map temporaire
+        if (idToDateMap.has(mediaId)) {
+          const date = idToDateMap.get(mediaId)!;
+          if (date >= startDate && date <= endDate) {
+            targetElement = element;
+            break;
+          }
+        } else {
+          // Fallback à mediaInfoMap
+          const mediaInfo = mediaInfoMap.get(mediaId);
+          if (mediaInfo?.createdAt) {
+            try {
+              const date = new Date(mediaInfo.createdAt);
+              if (!isNaN(date.getTime())) {
+                // Vérifier si la date est dans le mois cible
+                if (date >= startDate && date <= endDate) {
+                  targetElement = element;
+                  break;
+                }
               }
+            } catch (error) {
+              console.error('Error checking date from mediaInfoMap:', error);
             }
-          } catch (error) {
-            console.error('Error checking date:', error);
           }
         }
       }
@@ -120,7 +187,7 @@ const GalleryTimeNavigation: React.FC<GalleryTimeNavigationProps> = ({
       // Fermer le popover après la sélection
       setIsOpen(false);
     }
-  }, [scrollElementRef, mediaInfoMap]);
+  }, [scrollElementRef, mediaInfoMap, mediaItemsWithDates, onNavigateToDate]);
   
   // Scroll rapide vers le haut
   const scrollToTop = useCallback(() => {

@@ -1,4 +1,3 @@
-
 import { MediaItem } from '@/types/gallery';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -9,6 +8,11 @@ export interface DirectoryNode {
   id: string;
   name: string;
   children?: DirectoryNode[];
+}
+
+export interface MediaItemWithDate {
+  id: string;
+  createdAt: string | null;
 }
 
 export interface DetailedMediaInfo {
@@ -127,7 +131,7 @@ export async function fetchDirectoryTree(position?: 'left' | 'right'): Promise<D
   }
 }
 
-export async function fetchMediaIds(directory: string, position: 'source' | 'destination', filter: string = 'all'): Promise<string[]> {
+export async function fetchMediaIds(directory: string, position: 'source' | 'destination', filter: string = 'all'): Promise<MediaItemWithDate[]> {
   // Mise à jour de l'URL: changement de /media à /list et ajout du paramètre folder
   const url = `${API_BASE_URL}/list?directory=${encodeURIComponent(position)}&folder=${encodeURIComponent(directory)}${filter !== 'all' ? `&filter=${filter}` : ''}`;
   console.log("Fetching media IDs from:", url);
@@ -142,36 +146,40 @@ export async function fetchMediaIds(directory: string, position: 'source' | 'des
     }
     
     const data = await response.json();
-    console.log("Received media IDs:", data);
+    console.log("Received media IDs with dates:", data);
     
     return data;
   } catch (error) {
     console.error("Error fetching media IDs:", error);
     
-    // Génère environ 200 IDs de média mock
+    // Génère environ 200 IDs de média mock avec dates
     console.log("Using mock media IDs due to error");
     const mockCount = 200 + Math.floor(Math.random() * 20); // Entre 200 et 220 médias
     
-    // Générer des IDs uniques pour éviter les conflits
+    // Générer des IDs uniques avec dates pour éviter les conflits
     // Ajout du directory (folder) dans le préfixe pour les données mock
     const prefix = `${position}-${directory}-${filter === 'all' ? '' : filter + '-'}`;
     
     // Générer des IDs pour les images (80% du total)
     const imageCount = Math.floor(mockCount * 0.8);
-    const imageIds = Array.from({ length: imageCount }, (_, i) => 
-      `${prefix}img-${i + 1000}`
-    );
+    const imageIds = Array.from({ length: imageCount }, (_, i) => ({
+      id: `${prefix}img-${i + 1000}`,
+      createdAt: randomDate()
+    }));
     
     // Générer des IDs pour les vidéos (20% du total)
     const videoCount = mockCount - imageCount;
-    const videoIds = Array.from({ length: videoCount }, (_, i) => 
-      `${prefix}vid-${i + 2000}`
+    const videoIds = Array.from({ length: videoCount }, (_, i) => ({
+      id: `${prefix}vid-${i + 2000}`,
+      createdAt: randomDate()
+    }));
+    
+    // Combiner et trier les IDs par date (du plus récent au plus ancien)
+    const mockMediaIds = [...imageIds, ...videoIds].sort((a, b) => 
+      new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime()
     );
     
-    // Combiner et mélanger les IDs
-    const mockMediaIds = [...imageIds, ...videoIds].sort(() => Math.random() - 0.5);
-    
-    console.log(`Generated ${mockMediaIds.length} mock media IDs with directory ${directory}`);
+    console.log(`Generated ${mockMediaIds.length} mock media IDs with dates with directory ${directory}`);
     return mockMediaIds;
   }
 }

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import random
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 app = FastAPI()
 
@@ -63,9 +63,28 @@ async def get_server_status():
     
     return MOCK_SERVER_STATUS
 
+@app.get("/list")
+async def get_media_list(directory: str, folder: str = "", filter: str = "all") -> List[Dict[str, str]]:
+    """Return the IDs of media along with their creation dates"""
+    # In a real implementation, this would query your database or filesystem
+    
+    # Create a list of media items with dates
+    media_items = []
+    for id in SAMPLE_MEDIA_IDS:
+        if id in MEDIA_INFO:
+            media_items.append({
+                "id": id,
+                "createdAt": MEDIA_INFO[id]["createdAt"]
+            })
+    
+    # Sort by date (newest first)
+    media_items.sort(key=lambda x: x["createdAt"], reverse=True)
+    
+    return media_items
+
 @app.get("/media")
 async def get_media_ids(directory: str) -> List[str]:
-    """Return just the IDs of media in the specified directory"""
+    """Legacy endpoint that returns just the IDs"""
     # In a real implementation, this would query your database or filesystem
     return SAMPLE_MEDIA_IDS
 

@@ -3,9 +3,10 @@ import React, { useRef } from 'react';
 import Gallery from '@/components/gallery/Gallery';
 import { useGalleryZoom } from '@/hooks/use-gallery-zoom';
 import { GalleryViewMode } from '@/types/gallery';
+import { MediaItemWithDate } from '@/api/imageApi';
 
 interface GalleryContentProps {
-  mediaIds: string[];
+  mediaIds: string[] | MediaItemWithDate[];
   selectedIds: string[];
   onSelectId: (id: string) => void;
   isLoading: boolean;

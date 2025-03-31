@@ -1,15 +1,18 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { DetailedMediaInfo } from '@/api/imageApi';
+import { MediaItemWithDate } from '@/api/imageApi';
 
 interface UseGalleryVisibleDateOptions {
   mediaInfoMap: Map<string, DetailedMediaInfo | null>;
+  mediaItemsWithDates?: MediaItemWithDate[];
   scrollingElementRef?: React.RefObject<HTMLElement>;
   isEnabled?: boolean;
 }
 
 export function useGalleryVisibleDate({
   mediaInfoMap,
+  mediaItemsWithDates = [],
   scrollingElementRef,
   isEnabled = true
 }: UseGalleryVisibleDateOptions) {
@@ -17,12 +20,23 @@ export function useGalleryVisibleDate({
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isScrollingRef = useRef(false);
   
+  // Créer une map d'ID à date pour un accès rapide
+  const idToDateMap = useRef(new Map<string, string>());
+  
+  // Mettre à jour la map d'ID à date quand mediaItemsWithDates change
+  useEffect(() => {
+    const newMap = new Map<string, string>();
+    mediaItemsWithDates.forEach(item => {
+      if (item.createdAt) {
+        newMap.set(item.id, item.createdAt);
+      }
+    });
+    idToDateMap.current = newMap;
+  }, [mediaItemsWithDates]);
+  
   // Fonction pour détecter les éléments visibles et leur date
   const checkVisibleElements = useCallback(() => {
     if (!isEnabled) return;
-    
-    // Si nous n'avons pas d'information sur les médias, ne rien faire
-    if (mediaInfoMap.size === 0) return;
     
     // Obtenir l'élément conteneur pour le scroll
     const scrollElement = scrollingElementRef?.current;
@@ -60,6 +74,14 @@ export function useGalleryVisibleDate({
     if (firstVisibleElement) {
       const mediaId = firstVisibleElement.getAttribute('data-media-id');
       if (mediaId) {
+        // Essayer d'abord la map d'ID à date pour une recherche plus rapide
+        const cachedDate = idToDateMap.current.get(mediaId);
+        if (cachedDate) {
+          setVisibleDate(cachedDate);
+          return;
+        }
+        
+        // Fallback à mediaInfoMap
         const mediaInfo = mediaInfoMap.get(mediaId);
         if (mediaInfo && mediaInfo.createdAt) {
           setVisibleDate(mediaInfo.createdAt);
@@ -121,5 +143,60 @@ export function useGalleryVisibleDate({
     };
   }, [checkVisibleElements, scrollingElementRef, isEnabled]);
   
-  return { visibleDate };
+  // Fonction pour naviguer à une date spécifique
+  const navigateToDate = useCallback((targetDate: string) => {
+    if (!scrollingElementRef?.current) return;
+    
+    const scrollElement = scrollingElementRef.current;
+    const mediaElements = scrollElement.querySelectorAll('[data-media-id]');
+    if (mediaElements.length === 0) return;
+    
+    const targetTimestamp = new Date(targetDate).getTime();
+    
+    // Trouver l'élément le plus proche de la date cible
+    let closestElement: Element | null = null;
+    let closestTimeDiff = Infinity;
+    
+    for (let i = 0; i < mediaElements.length; i++) {
+      const element = mediaElements[i];
+      const mediaId = element.getAttribute('data-media-id');
+      
+      if (mediaId) {
+        // Vérifier d'abord dans idToDateMap
+        let mediaDate: string | null = null;
+        
+        if (idToDateMap.current.has(mediaId)) {
+          mediaDate = idToDateMap.current.get(mediaId) || null;
+        } else {
+          const mediaInfo = mediaInfoMap.get(mediaId);
+          mediaDate = mediaInfo?.createdAt || null;
+        }
+        
+        if (mediaDate) {
+          const timestamp = new Date(mediaDate).getTime();
+          const timeDiff = Math.abs(timestamp - targetTimestamp);
+          
+          if (timeDiff < closestTimeDiff) {
+            closestTimeDiff = timeDiff;
+            closestElement = element;
+          }
+        }
+      }
+    }
+    
+    // Scroll vers l'élément le plus proche
+    if (closestElement) {
+      const containerRect = scrollElement.getBoundingClientRect();
+      const elementRect = closestElement.getBoundingClientRect();
+      
+      const scrollTop = elementRect.top - containerRect.top + scrollElement.scrollTop - 20;
+      
+      scrollElement.scrollTo({
+        top: scrollTop,
+        behavior: 'smooth'
+      });
+    }
+  }, [scrollingElementRef, mediaInfoMap]);
+  
+  return { visibleDate, navigateToDate };
 }
