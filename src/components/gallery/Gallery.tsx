@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { useLanguage } from '@/hooks/use-language';
 import VirtualizedGalleryGrid from './VirtualizedGalleryGrid';
@@ -85,7 +84,6 @@ const Gallery: React.FC<GalleryProps> = ({
     });
   }, []);
 
-  // Utiliser le hook pour obtenir la date visible
   const { visibleDate } = useGalleryVisibleDate({
     mediaInfoMap,
     scrollingElementRef: gridContainerRef,
@@ -141,13 +139,12 @@ const Gallery: React.FC<GalleryProps> = ({
         onToggleFullView={onToggleFullView}
       />
       
-      {/* Bandeau de date */}
-      <GalleryDateBanner 
-        visibleDate={visibleDate} 
-        isEnabled={mediaIds.length > 10}
-      />
-      
       <div className="flex-1 overflow-hidden relative scrollbar-vertical" ref={gridContainerRef}>
+        <GalleryDateBanner 
+          visibleDate={visibleDate} 
+          isEnabled={mediaIds.length > 10}
+        />
+        
         {shouldShowInfoPanel && (
           <div className="absolute top-2 left-0 right-0 z-10 flex justify-center">
             <MediaInfoPanel

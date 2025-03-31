@@ -25,8 +25,7 @@ export function useGalleryVisibleDate({
     if (mediaInfoMap.size === 0) return;
     
     // Obtenir l'élément conteneur pour le scroll
-    const scrollElement = scrollingElementRef?.current || document.querySelector('.gallery-container');
-    
+    const scrollElement = scrollingElementRef?.current;
     if (!scrollElement) return;
     
     // Obtenir les dimensions de la fenêtre visible
@@ -40,7 +39,6 @@ export function useGalleryVisibleDate({
     
     // Trouver le premier élément visible
     let firstVisibleElement: Element | null = null;
-    let firstVisibleElementDate: string | null = null;
     
     for (let i = 0; i < mediaElements.length; i++) {
       const element = mediaElements[i];
@@ -64,21 +62,20 @@ export function useGalleryVisibleDate({
       if (mediaId) {
         const mediaInfo = mediaInfoMap.get(mediaId);
         if (mediaInfo && mediaInfo.createdAt) {
-          firstVisibleElementDate = mediaInfo.createdAt;
+          setVisibleDate(mediaInfo.createdAt);
         }
       }
+    } else {
+      // Aucun élément visible dans la vue
+      setVisibleDate(null);
     }
-    
-    // Mettre à jour la date visible
-    setVisibleDate(firstVisibleElementDate);
   }, [mediaInfoMap, scrollingElementRef, isEnabled]);
   
   // Gérer le scroll
   useEffect(() => {
     if (!isEnabled) return;
     
-    const scrollElement = scrollingElementRef?.current || document.querySelector('.gallery-container');
-    
+    const scrollElement = scrollingElementRef?.current;
     if (!scrollElement) return;
     
     const handleScroll = () => {
@@ -105,12 +102,18 @@ export function useGalleryVisibleDate({
     
     // Ajouter l'écouteur de défilement
     scrollElement.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkVisibleElements, { passive: true });
+    
+    // Observer les changements de taille de l'élément
+    const resizeObserver = new ResizeObserver(() => {
+      checkVisibleElements();
+    });
+    
+    resizeObserver.observe(scrollElement);
     
     // Nettoyer
     return () => {
       scrollElement.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkVisibleElements);
+      resizeObserver.disconnect();
       
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
