@@ -38,7 +38,7 @@ const GalleryGridCell = memo(({ columnIndex, rowIndex, style, data }: GalleryGri
   const adjustedStyle = data.calculateCellStyle(style, columnIndex);
   
   return (
-    <div style={adjustedStyle}>
+    <div style={adjustedStyle} data-grid-row={rowIndex} data-grid-col={columnIndex}>
       <LazyMediaItem
         key={id}
         id={id}

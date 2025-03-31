@@ -13,6 +13,8 @@ import { useGalleryMediaHandler } from '@/hooks/use-gallery-media-handler';
 import MediaInfoPanel from '../media/MediaInfoPanel';
 import { useIsMobile } from '@/hooks/use-breakpoint';
 import { MediaItem, GalleryViewMode } from '@/types/gallery';
+import GalleryDateBanner from './GalleryDateBanner';
+import { useGalleryVisibleDate } from '@/hooks/use-gallery-visible-date';
 
 interface GalleryProps {
   title: string;
@@ -57,6 +59,7 @@ const Gallery: React.FC<GalleryProps> = ({
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
   
   const selection = useGallerySelection({
     mediaIds,
@@ -81,6 +84,13 @@ const Gallery: React.FC<GalleryProps> = ({
       return newMap;
     });
   }, []);
+
+  // Utiliser le hook pour obtenir la date visible
+  const { visibleDate } = useGalleryVisibleDate({
+    mediaInfoMap,
+    scrollingElementRef: gridContainerRef,
+    isEnabled: mediaIds.length > 0 && !isLoading && !isError
+  });
 
   const shouldShowInfoPanel = selectedIds.length > 0;
   
@@ -131,7 +141,13 @@ const Gallery: React.FC<GalleryProps> = ({
         onToggleFullView={onToggleFullView}
       />
       
-      <div className="flex-1 overflow-hidden relative scrollbar-vertical">
+      {/* Bandeau de date */}
+      <GalleryDateBanner 
+        visibleDate={visibleDate} 
+        isEnabled={mediaIds.length > 10}
+      />
+      
+      <div className="flex-1 overflow-hidden relative scrollbar-vertical" ref={gridContainerRef}>
         {shouldShowInfoPanel && (
           <div className="absolute top-2 left-0 right-0 z-10 flex justify-center">
             <MediaInfoPanel
