@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import random
 from datetime import datetime, timedelta
+import time
 from typing import List, Optional, Dict, Any
 
 app = FastAPI()
@@ -30,11 +31,12 @@ for media_id in SAMPLE_MEDIA_IDS:
     
     # Random date within the last 3 years
     days_ago = random.randint(0, 1095)  # up to 3 years
-    created_date = (datetime.now() - timedelta(days=days_ago)).isoformat()
-    
+    created_date = (datetime.now() - timedelta(days=days_ago))
+    # Store both formats for compatibility
     MEDIA_INFO[media_id] = {
         "alt": f"Sample {'Video' if is_video else 'Image'} {media_id}.{extension}",
-        "createdAt": created_date
+        "createdAt": created_date.isoformat(),
+        "timestamp": int(created_date.timestamp())
     }
 
 # Mock server status
@@ -71,11 +73,20 @@ async def get_media_ids(directory: str) -> List[Dict[str, Any]]:
     return [{"id": media_id, "createdAt": MEDIA_INFO[media_id]["createdAt"]} for media_id in SAMPLE_MEDIA_IDS]
 
 @app.get("/list")
-async def get_media_list(directory: str, folder: str = "", filter: str = "all") -> List[Dict[str, Any]]:
-    """Return media IDs with their creation dates"""
-    # In a real implementation, this would query your database or filesystem
-    # Now returns objects with id and createdAt fields
-    return [{"id": media_id, "createdAt": MEDIA_INFO[media_id]["createdAt"]} for media_id in SAMPLE_MEDIA_IDS]
+async def get_media_list(directory: str, folder: str = "", filter: str = "all"):
+    """Return media IDs with their creation dates in optimized format"""
+    # New optimized format: two parallel arrays
+    ids = []
+    dates = []
+    
+    for media_id in SAMPLE_MEDIA_IDS:
+        ids.append(media_id)
+        dates.append(MEDIA_INFO[media_id]["timestamp"])
+        
+    return {
+        "ids": ids,
+        "dates": dates
+    }
 
 @app.get("/info")
 async def get_media_info(id: str):

@@ -5,7 +5,13 @@ export type GalleryViewMode = 'both' | 'left' | 'right';
 // ViewModeType est utilisé pour les calculs de colonnes
 export type ViewModeType = 'desktop' | 'desktop-single' | 'mobile-split' | 'mobile-single';
 
-// Media item with date for API response
+// Interface optimisée pour la réponse API avec tableaux parallèles
+export interface MediaListResponse {
+  ids: string[];
+  dates: number[]; // Timestamps Unix
+}
+
+// Media item with date for API response (maintenu pour compatibilité)
 export interface MediaItemWithDate {
   id: string;
   createdAt?: string;

@@ -35,6 +35,7 @@ export function useGalleryMediaTracking(
  * Hook pour récupérer les médias avec leurs dates de création
  * Cette fonction est destinée à être utilisée pour implémenter des fonctionnalités 
  * de navigation basées sur les dates ultérieurement
+ * Maintenant compatible avec le format optimisé (tableaux parallèles)
  */
 export function useMediaWithDates(
   directory: string,
