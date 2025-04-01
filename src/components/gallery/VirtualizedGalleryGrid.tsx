@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo, forwardRef } from 'react';
+import React, { memo, useMemo, forwardRef, useRef, useImperativeHandle } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { DetailedMediaInfo } from '@/api/imageApi';
@@ -39,6 +39,12 @@ const VirtualizedGalleryGrid = forwardRef<any, VirtualizedGalleryGridProps>(({
   position = 'source',
   gap = 8 // Valeur par défaut
 }, ref) => {
+  // Create an internal ref that we can use within the component
+  const internalGridRef = useRef<FixedSizeGrid>(null);
+  
+  // Synchronize the external ref with our internal ref
+  useImperativeHandle(ref, () => internalGridRef.current);
+  
   // Use custom hook for grid management
   const {
     gridKey,
@@ -46,7 +52,8 @@ const VirtualizedGalleryGrid = forwardRef<any, VirtualizedGalleryGridProps>(({
   } = useGalleryGrid();
   
   // Use hook for tracking media changes to optimize rendering
-  useGalleryMediaTracking(mediaIds, ref ? ref : { current: null });
+  // Pass our internal ref which is guaranteed to be a RefObject
+  useGalleryMediaTracking(mediaIds, internalGridRef);
   
   // Calculate the number of rows based on media and columns
   const rowCount = calculateRowCount(mediaIds.length, columnsCount);
@@ -95,7 +102,7 @@ const VirtualizedGalleryGrid = forwardRef<any, VirtualizedGalleryGridProps>(({
           
           return (
             <FixedSizeGrid
-              ref={ref}
+              ref={internalGridRef}
               columnCount={columnsCount}
               columnWidth={columnWidth}
               height={height}
