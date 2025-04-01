@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-breakpoint';
-import { fetchMediaIds } from '@/api/imageApi';
+import { fetchMediaIds, fetchMediaWithDates } from '@/api/imageApi';
 import { GalleryViewMode, ViewModeType } from '@/types/gallery';
 import { MediaFilter } from '@/components/AppSidebar';
 import GalleryContent from '@/components/gallery/GalleryContent';
@@ -24,7 +24,7 @@ interface BaseGalleryProps {
   activeSide: 'left' | 'right';
   deleteMutation: any;
   handleDeleteSelected: (side: 'left' | 'right') => void;
-  handleDelete: () => void; // Ajout de la propriété handleDelete
+  handleDelete: () => void;
   leftFilter?: MediaFilter;
   rightFilter?: MediaFilter;
 }
@@ -76,6 +76,35 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
     queryKey: ['rightMediaIds', selectedDirectoryIdRight, rightFilter],
     queryFn: () => fetchMediaIds(selectedDirectoryIdRight, 'destination', rightFilter as string)
   });
+  
+  // Fetch dates for left gallery
+  const { data: leftMediaWithDates, isLoading: isLoadingLeftDates } = useQuery({
+    queryKey: ['leftMediaDates', selectedDirectoryIdLeft, leftFilter],
+    queryFn: () => fetchMediaWithDates(selectedDirectoryIdLeft, 'source', leftFilter as string),
+    enabled: !!selectedDirectoryIdLeft && leftMediaIds.length > 0
+  });
+  
+  // Fetch dates for right gallery
+  const { data: rightMediaWithDates, isLoading: isLoadingRightDates } = useQuery({
+    queryKey: ['rightMediaDates', selectedDirectoryIdRight, rightFilter],
+    queryFn: () => fetchMediaWithDates(selectedDirectoryIdRight, 'destination', rightFilter as string),
+    enabled: !!selectedDirectoryIdRight && rightMediaIds.length > 0
+  });
+  
+  // Extraire les timestamps
+  const leftDates = React.useMemo(() => {
+    if (!leftMediaWithDates) return undefined;
+    return leftMediaWithDates.map(item => 
+      item.createdAt ? new Date(item.createdAt).getTime() : Date.now()
+    );
+  }, [leftMediaWithDates]);
+  
+  const rightDates = React.useMemo(() => {
+    if (!rightMediaWithDates) return undefined;
+    return rightMediaWithDates.map(item => 
+      item.createdAt ? new Date(item.createdAt).getTime() : Date.now()
+    );
+  }, [rightMediaWithDates]);
 
   // Handler functions
   const handleSelectIdLeft = (id: string) => setSelectedIdsLeft((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
@@ -83,7 +112,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
   const handlePreviewItemLeft = (id: string) => console.log(`Previewing item ${id} in source`);
   const handlePreviewItemRight = (id: string) => console.log(`Previewing item ${id} in destination`);
   
-  // Restore the handleConfirmDelete function to fix the TypeScript errors
+  // Function for confirming deletion
   const handleConfirmDelete = (side: 'left' | 'right') => () => handleDeleteSelected(side);
   
   // Function for executing the actual delete operation
@@ -130,7 +159,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
       mediaIds={leftMediaIds || []}
       selectedIds={selectedIdsLeft}
       onSelectId={handleSelectIdLeft}
-      isLoading={isLoadingLeftMediaIds}
+      isLoading={isLoadingLeftMediaIds || isLoadingLeftDates}
       isError={!!errorLeftMediaIds}
       error={errorLeftMediaIds}
       columnsCount={columnsCountLeft}
@@ -143,6 +172,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
       onColumnsChange={handleLeftColumnsChange}
       mobileViewMode={mobileViewMode}
       onToggleFullView={handleToggleLeftFullView}
+      dates={leftDates}
     />
   );
 
@@ -152,7 +182,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
       mediaIds={rightMediaIds || []}
       selectedIds={selectedIdsRight}
       onSelectId={handleSelectIdRight}
-      isLoading={isLoadingRightMediaIds}
+      isLoading={isLoadingRightMediaIds || isLoadingRightDates}
       isError={!!errorRightMediaIds}
       error={errorRightMediaIds}
       columnsCount={columnsCountRight}
@@ -165,6 +195,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
       onColumnsChange={handleRightColumnsChange}
       mobileViewMode={mobileViewMode}
       onToggleFullView={handleToggleRightFullView}
+      dates={rightDates}
     />
   );
 
@@ -179,7 +210,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onConfirm={executeDelete} // Using the executeDelete function for actual deletion
+        onConfirm={executeDelete}
         selectedIds={activeSide === 'left' ? selectedIdsLeft : selectedIdsRight}
         onCancel={() => setDeleteDialogOpen(false)}
         isPending={deleteMutation.isPending}

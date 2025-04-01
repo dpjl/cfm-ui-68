@@ -2,11 +2,11 @@
 import React from 'react';
 import { Button } from '../ui/button';
 import { SelectionMode } from '../../hooks/use-gallery-selection';
-import { useMediaQuery } from '../../hooks/use-media-query';
 import { CheckSquare, Square, ChevronLeft, ChevronRight, Settings, Maximize, Minimize } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-breakpoint';
-import { GalleryViewMode } from '@/types/gallery';
+import { DatePeriod, GalleryViewMode } from '@/types/gallery';
+import DateNavigator from './DateNavigator';
 
 interface GalleryToolbarProps {
   directory?: string;
@@ -20,9 +20,18 @@ interface GalleryToolbarProps {
   onToggleSidebar?: () => void;
   selectionMode: SelectionMode;
   onToggleSelectionMode: () => void;
-  // Nouvelles props pour le toggle de vue
+  // Props pour le toggle de vue
   mobileViewMode?: GalleryViewMode;
   onToggleFullView?: () => void;
+  // Nouvelles props pour la navigation par date
+  periods?: DatePeriod[];
+  currentPeriod?: DatePeriod | null;
+  onSelectPeriod?: (period: DatePeriod) => void;
+  onPreviousPeriod?: () => void;
+  onNextPeriod?: () => void;
+  canNavigatePrevious?: boolean;
+  canNavigateNext?: boolean;
+  hasDateData?: boolean;
 }
 
 const GalleryToolbar: React.FC<GalleryToolbarProps> = ({ 
@@ -36,7 +45,16 @@ const GalleryToolbar: React.FC<GalleryToolbarProps> = ({
   selectionMode,
   onToggleSelectionMode,
   mobileViewMode = 'both',
-  onToggleFullView
+  onToggleFullView,
+  // Nouvelles props pour la navigation par date
+  periods = [],
+  currentPeriod = null,
+  onSelectPeriod = () => {},
+  onPreviousPeriod = () => {},
+  onNextPeriod = () => {},
+  canNavigatePrevious = false,
+  canNavigateNext = false,
+  hasDateData = false
 }) => {
   const isMobile = useIsMobile();
   
@@ -48,7 +66,20 @@ const GalleryToolbar: React.FC<GalleryToolbarProps> = ({
   const isFullView = (position === 'source' && mobileViewMode === 'left') || 
                      (position === 'destination' && mobileViewMode === 'right');
 
-  // Pour la galerie de gauche (source), ordre: sidebar, select all, clear, mode, view toggle
+  // Affichage conditionnel du DateNavigator uniquement s'il y a des données
+  const dateNavigator = hasDateData ? (
+    <DateNavigator
+      periods={periods}
+      currentPeriod={currentPeriod}
+      onSelectPeriod={onSelectPeriod}
+      onPrevious={onPreviousPeriod}
+      onNext={onNextPeriod}
+      canNavigatePrevious={canNavigatePrevious}
+      canNavigateNext={canNavigateNext}
+    />
+  ) : null;
+
+  // Pour la galerie de gauche (source), ordre: sidebar, select all, clear, mode, view toggle, dateNav
   const leftGalleryToolbar = (
     <>
       {onToggleSidebar && (
@@ -175,7 +206,7 @@ const GalleryToolbar: React.FC<GalleryToolbarProps> = ({
     </>
   );
 
-  // Pour la galerie de droite (destination), ordre: view toggle, mode, clear, select all, sidebar
+  // Pour la galerie de droite (destination), ordre: dateNav, view toggle, mode, clear, select all, sidebar
   const rightGalleryToolbar = (
     <>
       {/* Bouton Agrandir/Réduire pour la vue */}
@@ -304,12 +335,17 @@ const GalleryToolbar: React.FC<GalleryToolbarProps> = ({
 
   return (
     <div className="flex items-center justify-between space-x-2 py-2">
-      {/* Galerie gauche: aligné à gauche */}
+      {/* Galerie gauche: boutons d'action alignés à gauche */}
       <div className="flex items-center space-x-1">
         {position === 'source' && leftGalleryToolbar}
       </div>
       
-      {/* Galerie droite: aligné à droite */}
+      {/* Navigateur de dates au centre */}
+      <div className="flex-1 flex justify-center">
+        {dateNavigator}
+      </div>
+      
+      {/* Galerie droite: boutons d'action alignés à droite */}
       <div className="flex items-center space-x-1 ml-auto">
         {position === 'destination' && rightGalleryToolbar}
       </div>

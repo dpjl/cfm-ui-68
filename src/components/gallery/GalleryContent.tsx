@@ -20,9 +20,9 @@ interface GalleryContentProps {
   position?: 'source' | 'destination';
   onToggleSidebar?: () => void;
   onColumnsChange?: (count: number) => void;
-  // Nouvelles props pour le toggle de vue
   mobileViewMode?: GalleryViewMode;
   onToggleFullView?: () => void;
+  dates?: number[]; // Timestamps pour la navigation par date
 }
 
 const GalleryContent: React.FC<GalleryContentProps> = ({
@@ -42,7 +42,8 @@ const GalleryContent: React.FC<GalleryContentProps> = ({
   onToggleSidebar,
   onColumnsChange,
   mobileViewMode,
-  onToggleFullView
+  onToggleFullView,
+  dates
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -92,6 +93,7 @@ const GalleryContent: React.FC<GalleryContentProps> = ({
         gap={4}
         mobileViewMode={mobileViewMode}
         onToggleFullView={onToggleFullView}
+        dates={dates} // Passer les timestamps pour la navigation par date
       />
     </div>
   );

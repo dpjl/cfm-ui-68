@@ -33,8 +33,6 @@ export function useGalleryMediaTracking(
 
 /**
  * Hook pour récupérer les médias avec leurs dates de création
- * Cette fonction est destinée à être utilisée pour implémenter des fonctionnalités 
- * de navigation basées sur les dates ultérieurement
  * Maintenant compatible avec le format optimisé (tableaux parallèles)
  */
 export function useMediaWithDates(
@@ -45,6 +43,7 @@ export function useMediaWithDates(
   const [mediaWithDates, setMediaWithDates] = useState<MediaItemWithDate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [timestamps, setTimestamps] = useState<number[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -57,6 +56,16 @@ export function useMediaWithDates(
         const data = await fetchMediaWithDates(directory, position, filter);
         if (isMounted) {
           setMediaWithDates(data);
+          
+          // Extraire les timestamps à partir des données
+          const extractedTimestamps = data.map(item => {
+            if (item.createdAt) {
+              return new Date(item.createdAt).getTime();
+            }
+            return Date.now(); // Fallback si pas de date
+          });
+          
+          setTimestamps(extractedTimestamps);
           setError(null);
         }
       } catch (err) {
@@ -82,6 +91,7 @@ export function useMediaWithDates(
     mediaWithDates,
     loading,
     error,
+    timestamps,
     // Fonction utilitaire pour obtenir les dates uniques (pour une future implémentation de navigateur de dates)
     getUniqueDates: (): string[] => {
       const dates = mediaWithDates
