@@ -13,6 +13,9 @@ import { useGalleryMediaHandler } from '@/hooks/use-gallery-media-handler';
 import MediaInfoPanel from '../media/MediaInfoPanel';
 import { useIsMobile } from '@/hooks/use-breakpoint';
 import { MediaItem, GalleryViewMode } from '@/types/gallery';
+import { useMediaWithDates } from '@/hooks/use-gallery-media-tracking';
+import { useMediaTimeline } from '@/hooks/use-media-timeline';
+import GalleryTimeline from './GalleryTimeline';
 
 interface GalleryProps {
   title: string;
@@ -57,6 +60,32 @@ const Gallery: React.FC<GalleryProps> = ({
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<any>(null);
+  
+  // Récupérer les dates des médias
+  const { mediaWithDates } = useMediaWithDates(
+    mediaIds.length > 0 ? 'current' : '', // Utiliser une valeur factice pour éviter des requêtes inutiles
+    position,
+    filter
+  );
+  
+  // Créer une version avec dates en utilisant les mediaIds actuels
+  const mediaIdsWithDates = React.useMemo(() => {
+    return mediaIds.map((id, index) => {
+      const existingItem = mediaWithDates.find(item => item.id === id);
+      return {
+        id,
+        createdAt: existingItem?.createdAt || new Date().toISOString()
+      };
+    });
+  }, [mediaIds, mediaWithDates]);
+  
+  // Utiliser le hook de timeline
+  const { timelineEntries, jumpToDate } = useMediaTimeline(
+    mediaIdsWithDates,
+    columnsCount,
+    gridRef
+  );
   
   const selection = useGallerySelection({
     mediaIds,
@@ -150,16 +179,27 @@ const Gallery: React.FC<GalleryProps> = ({
         {mediaIds.length === 0 ? (
           <GalleryEmptyState />
         ) : (
-          <VirtualizedGalleryGrid
-            mediaIds={mediaIds}
-            selectedIds={selectedIds}
-            onSelectId={selection.handleSelectItem}
-            columnsCount={columnsCount}
-            viewMode={viewMode}
-            updateMediaInfo={updateMediaInfo}
-            position={position}
-            gap={gap}
-          />
+          <>
+            <VirtualizedGalleryGrid
+              ref={gridRef}
+              mediaIds={mediaIds}
+              selectedIds={selectedIds}
+              onSelectId={selection.handleSelectItem}
+              columnsCount={columnsCount}
+              viewMode={viewMode}
+              updateMediaInfo={updateMediaInfo}
+              position={position}
+              gap={gap}
+            />
+            
+            {/* Timeline de la galerie */}
+            <GalleryTimeline
+              timelineEntries={timelineEntries}
+              onJumpToDate={jumpToDate}
+              position={position}
+              viewMode={viewMode}
+            />
+          </>
         )}
       </div>
       

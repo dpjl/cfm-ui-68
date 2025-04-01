@@ -1,0 +1,79 @@
+
+/* Timeline Component Styles */
+@layer components {
+  /* Container principal */
+  .gallery-timeline-container {
+    @apply absolute bottom-1 left-0 right-0 z-10 flex items-center justify-center;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Styles spécifiques pour la timeline de gauche */
+  .timeline-left {
+    @apply left-2 right-auto;
+  }
+  
+  /* Styles spécifiques pour la timeline de droite */
+  .timeline-right {
+    @apply left-auto right-2;
+  }
+  
+  /* Version compacte pour les modes split ou mobile */
+  .timeline-compact {
+    @apply scale-90 transform-gpu;
+  }
+  
+  /* Bouton toggle */
+  .timeline-toggle-button {
+    @apply h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Wrapper pour la timeline */
+  .timeline-wrapper {
+    @apply absolute bottom-9 flex items-center bg-background/80 backdrop-blur-sm rounded-md overflow-hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: calc(100% - 1rem);
+  }
+  
+  /* Zone scrollable */
+  .timeline-scrollable {
+    @apply flex items-center overflow-x-auto whitespace-nowrap py-1 px-2 scrollbar-thin;
+    -webkit-overflow-scrolling: touch; /* Pour une meilleure performance sur iOS */
+    scroll-behavior: smooth;
+    max-width: 80vw;
+  }
+  
+  /* Élément de date */
+  .timeline-date-item {
+    @apply h-7 min-w-max px-2 mx-0.5 text-xs;
+  }
+  
+  /* Boutons de navigation */
+  .timeline-nav-button {
+    @apply h-7 w-6 p-0;
+  }
+  
+  /* Ajustements pour mobile */
+  @media (max-width: 640px) {
+    .timeline-scrollable {
+      max-width: 60vw;
+    }
+    
+    .timeline-date-item {
+      @apply text-[10px] h-6 px-1.5;
+    }
+    
+    .timeline-wrapper {
+      @apply bottom-8;
+    }
+    
+    .timeline-nav-button {
+      @apply w-5 h-6;
+    }
+  }
+  
+  /* Styles spécifiques pour les grilles en affichage split */
+  .split-view .gallery-timeline-container {
+    @apply scale-75 transform-gpu;
+  }
+}
