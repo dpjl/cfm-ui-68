@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-breakpoint';
-import { fetchMediaIds, MediaItemWithDate } from '@/api/imageApi';
+import { fetchMediaIds } from '@/api/imageApi';
 import { GalleryViewMode, ViewModeType } from '@/types/gallery';
 import { MediaFilter } from '@/components/AppSidebar';
 import GalleryContent from '@/components/gallery/GalleryContent';
@@ -123,15 +123,11 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
     }
   };
 
-  // Préparer les listes d'IDs normalisées pour l'interface
-  const normalizedLeftMediaIds = Array.isArray(leftMediaIds) ? leftMediaIds : [];
-  const normalizedRightMediaIds = Array.isArray(rightMediaIds) ? rightMediaIds : [];
-
   // Prepare content for left and right galleries
   const leftGalleryContent = (
     <GalleryContent
       title="Source"
-      mediaIds={normalizedLeftMediaIds}
+      mediaIds={leftMediaIds || []}
       selectedIds={selectedIdsLeft}
       onSelectId={handleSelectIdLeft}
       isLoading={isLoadingLeftMediaIds}
@@ -153,7 +149,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
   const rightGalleryContent = (
     <GalleryContent
       title="Destination"
-      mediaIds={normalizedRightMediaIds}
+      mediaIds={rightMediaIds || []}
       selectedIds={selectedIdsRight}
       onSelectId={handleSelectIdRight}
       isLoading={isLoadingRightMediaIds}
@@ -183,7 +179,7 @@ const GalleriesContainer: React.FC<GalleriesContainerProps> = ({
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onConfirm={executeDelete}
+        onConfirm={executeDelete} // Using the executeDelete function for actual deletion
         selectedIds={activeSide === 'left' ? selectedIdsLeft : selectedIdsRight}
         onCancel={() => setDeleteDialogOpen(false)}
         isPending={deleteMutation.isPending}

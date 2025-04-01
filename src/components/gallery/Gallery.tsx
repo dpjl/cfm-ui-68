@@ -5,22 +5,18 @@ import VirtualizedGalleryGrid from './VirtualizedGalleryGrid';
 import GalleryEmptyState from './GalleryEmptyState';
 import GallerySkeletons from './GallerySkeletons';
 import MediaPreview from '../MediaPreview';
-import { DetailedMediaInfo, MediaItemWithDate } from '@/api/imageApi';
+import { DetailedMediaInfo } from '@/api/imageApi';
 import { useGallerySelection } from '@/hooks/use-gallery-selection';
 import { useGalleryPreviewHandler } from '@/hooks/use-gallery-preview-handler';
 import GalleryToolbar from './GalleryToolbar';
 import { useGalleryMediaHandler } from '@/hooks/use-gallery-media-handler';
 import MediaInfoPanel from '../media/MediaInfoPanel';
 import { useIsMobile } from '@/hooks/use-breakpoint';
-import { GalleryViewMode } from '@/types/gallery';
-import GalleryDateBanner from './GalleryDateBanner';
-import { useGalleryVisibleDate } from '@/hooks/use-gallery-visible-date';
-import GalleryTimeNavigation from './GalleryTimeNavigation';
-import MiniTimeline from './MiniTimeline';
+import { MediaItem, GalleryViewMode } from '@/types/gallery';
 
 interface GalleryProps {
   title: string;
-  mediaIds: string[] | MediaItemWithDate[];
+  mediaIds: string[];
   selectedIds: string[];
   onSelectId: (id: string) => void;
   isLoading?: boolean;
@@ -61,39 +57,15 @@ const Gallery: React.FC<GalleryProps> = ({
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
-  const gridContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Normaliser les IDs de médias et extraire les objets MediaItemWithDate si nécessaire
-  const normalizedIds = React.useMemo(() => {
-    if (mediaIds.length === 0) return [];
-    
-    // Vérifier si nous avons des MediaItemWithDate ou juste des IDs
-    if (typeof mediaIds[0] === 'string') {
-      return mediaIds as string[];
-    } else {
-      return (mediaIds as MediaItemWithDate[]).map(item => item.id);
-    }
-  }, [mediaIds]);
-  
-  // Extraire les dates des MediaItemWithDate si disponibles
-  const mediaItemsWithDates = React.useMemo(() => {
-    if (mediaIds.length === 0) return [];
-    
-    if (typeof mediaIds[0] === 'string') {
-      return []; // Pas de dates disponibles au départ
-    } else {
-      return mediaIds as MediaItemWithDate[];
-    }
-  }, [mediaIds]);
   
   const selection = useGallerySelection({
-    mediaIds: normalizedIds,
+    mediaIds,
     selectedIds,
     onSelectId
   });
   
   const preview = useGalleryPreviewHandler({
-    mediaIds: normalizedIds,
+    mediaIds,
     onPreviewMedia
   });
   
@@ -110,26 +82,11 @@ const Gallery: React.FC<GalleryProps> = ({
     });
   }, []);
 
-  // Mise à jour pour utiliser mediaItemsWithDates
-  const { visibleDate, navigateToDate } = useGalleryVisibleDate({
-    mediaInfoMap,
-    mediaItemsWithDates,
-    scrollingElementRef: gridContainerRef,
-    isEnabled: normalizedIds.length > 0 && !isLoading && !isError
-  });
-
   const shouldShowInfoPanel = selectedIds.length > 0;
   
   const handleCloseInfoPanel = useCallback(() => {
     selectedIds.forEach(id => onSelectId(id));
   }, [selectedIds, onSelectId]);
-  
-  // Gérer la navigation vers une date spécifique
-  const handleNavigateToDate = useCallback((date: string) => {
-    if (navigateToDate) {
-      navigateToDate(date);
-    }
-  }, [navigateToDate]);
   
   if (isLoading) {
     return (
@@ -158,13 +115,10 @@ const Gallery: React.FC<GalleryProps> = ({
     return false;
   };
   
-  const shouldShowTimeNavigation = normalizedIds.length > 20;
-  const shouldShowMiniTimeline = normalizedIds.length > 30 && isMobile;
-  
   return (
     <div className="flex flex-col h-full relative" ref={containerRef}>
       <GalleryToolbar
-        mediaIds={normalizedIds}
+        mediaIds={mediaIds}
         selectedIds={selectedIds}
         onSelectAll={selection.handleSelectAll}
         onDeselectAll={selection.handleDeselectAll}
@@ -177,12 +131,7 @@ const Gallery: React.FC<GalleryProps> = ({
         onToggleFullView={onToggleFullView}
       />
       
-      <div className="flex-1 overflow-hidden relative scrollbar-vertical" ref={gridContainerRef}>
-        <GalleryDateBanner 
-          visibleDate={visibleDate} 
-          isEnabled={normalizedIds.length > 10}
-        />
-        
+      <div className="flex-1 overflow-hidden relative scrollbar-vertical">
         {shouldShowInfoPanel && (
           <div className="absolute top-2 left-0 right-0 z-10 flex justify-center">
             <MediaInfoPanel
@@ -198,11 +147,11 @@ const Gallery: React.FC<GalleryProps> = ({
           </div>
         )}
         
-        {normalizedIds.length === 0 ? (
+        {mediaIds.length === 0 ? (
           <GalleryEmptyState />
         ) : (
           <VirtualizedGalleryGrid
-            mediaIds={normalizedIds}
+            mediaIds={mediaIds}
             selectedIds={selectedIds}
             onSelectId={selection.handleSelectItem}
             columnsCount={columnsCount}
@@ -212,23 +161,6 @@ const Gallery: React.FC<GalleryProps> = ({
             gap={gap}
           />
         )}
-        
-        {shouldShowTimeNavigation && normalizedIds.length > 0 && (
-          <GalleryTimeNavigation 
-            mediaInfoMap={mediaInfoMap}
-            scrollElementRef={gridContainerRef}
-            mediaItemsWithDates={mediaItemsWithDates}
-            onNavigateToDate={handleNavigateToDate}
-          />
-        )}
-        
-        {shouldShowMiniTimeline && (
-          <MiniTimeline 
-            mediaItems={mediaItemsWithDates}
-            onNavigateTo={handleNavigateToDate}
-            position={position === 'source' ? 'left' : 'right'}
-          />
-        )}
       </div>
       
       {preview.previewMediaId && (
@@ -236,10 +168,10 @@ const Gallery: React.FC<GalleryProps> = ({
           mediaId={preview.previewMediaId}
           isVideo={isVideoPreview(preview.previewMediaId)}
           onClose={preview.handleClosePreview}
-          onNext={normalizedIds.length > 1 ? () => preview.handleNavigatePreview('next') : undefined}
-          onPrevious={normalizedIds.length > 1 ? () => preview.handleNavigatePreview('prev') : undefined}
-          hasNext={normalizedIds.length > 1}
-          hasPrevious={normalizedIds.length > 1}
+          onNext={mediaIds.length > 1 ? () => preview.handleNavigatePreview('next') : undefined}
+          onPrevious={mediaIds.length > 1 ? () => preview.handleNavigatePreview('prev') : undefined}
+          hasNext={mediaIds.length > 1}
+          hasPrevious={mediaIds.length > 1}
           position={position}
         />
       )}

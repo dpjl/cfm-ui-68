@@ -58,49 +58,6 @@
       @apply h-6 w-6;
       touch-action: manipulation;
     }
-    
-    /* Enhance mobile scrollbar experience */
-    .gallery-scrollbar::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    .gallery-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgba(128, 128, 128, 0.4);
-      border-radius: 4px;
-    }
-    
-    .gallery-scrollbar {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(128, 128, 128, 0.4) transparent;
-    }
-    
-    /* Media info panel horizontal scroll */
-    .media-info-horizontal-scroll {
-      overflow-x: auto;
-      white-space: nowrap;
-      max-width: 100%;
-      scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Make navigation buttons bigger on touch devices for better usability */
-    .gallery-time-navigation .button-icon {
-      @apply h-10 w-10;
-    }
-    
-    /* Adjust position for mobile */
-    .gallery-time-navigation {
-      @apply bottom-3 right-3;
-    }
-    
-    /* Mini timeline positioning for mobile */
-    .mini-timeline {
-      @apply z-40;
-    }
-    
-    .mini-timeline.expanded {
-      @apply backdrop-blur-sm bg-background/60;
-    }
   }
   
   /* Mobile view mode switcher */
@@ -124,6 +81,32 @@
     @apply flex items-center justify-between text-xs text-muted-foreground mb-1;
   }
   
+  /* Enhance mobile scrollbar experience */
+  @media (max-width: 768px) {
+    .gallery-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .gallery-scrollbar::-webkit-scrollbar-thumb {
+      background-color: rgba(128, 128, 128, 0.4);
+      border-radius: 4px;
+    }
+    
+    .gallery-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(128, 128, 128, 0.4) transparent;
+    }
+    
+    /* Media info panel horizontal scroll */
+    .media-info-horizontal-scroll {
+      overflow-x: auto;
+      white-space: nowrap;
+      max-width: 100%;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
   /* Gallery transition classes */
   .gallery-container {
     @apply relative flex flex-1 overflow-hidden;
@@ -153,29 +136,5 @@
   
   .gallery-panel.half-width {
     width: 50% !important;
-  }
-  
-  /* Time navigation styles */
-  .gallery-time-navigation {
-    touch-action: manipulation;
-  }
-  
-  .gallery-time-navigation button {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    touch-action: manipulation;
-  }
-  
-  .gallery-month-button {
-    @apply flex justify-between items-center w-full text-xs px-2 py-1 hover:bg-accent/50 rounded transition-colors;
-  }
-  
-  .gallery-month-button .month-count {
-    @apply text-muted-foreground ml-auto text-2xs;
-  }
-  
-  /* Mini timeline styles */
-  .mini-timeline {
-    touch-action: manipulation;
-    z-index: 30;
   }
 }

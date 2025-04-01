@@ -5,7 +5,6 @@ import type { FixedSizeGrid } from 'react-window';
 /**
  * Hook pour gérer le suivi des médias dans la galerie et leur affichage
  * Optimisé pour éviter les réinitialisations inutiles du défilement
- * et pour fournir des informations sur les éléments visibles
  */
 export function useGalleryMediaTracking(
   mediaIds: string[], 
