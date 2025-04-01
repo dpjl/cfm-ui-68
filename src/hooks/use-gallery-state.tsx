@@ -26,13 +26,6 @@ export function useGalleryState() {
         context.setSelectedIdsRight(prev => [...prev, id]);
       }
       context.setActiveSide('right');
-    },
-    
-    // Nouvelle méthode pour obtenir les timestamps
-    getTimestamps: (mediaIds: string[], position: 'source' | 'destination') => {
-      // Cette méthode pourrait être améliorée dans une implémentation future
-      // pour récupérer les timestamps depuis un cache ou une API
-      return [];
     }
   };
 }

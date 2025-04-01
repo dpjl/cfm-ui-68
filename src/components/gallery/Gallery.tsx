@@ -13,7 +13,6 @@ import { useGalleryMediaHandler } from '@/hooks/use-gallery-media-handler';
 import MediaInfoPanel from '../media/MediaInfoPanel';
 import { useIsMobile } from '@/hooks/use-breakpoint';
 import { MediaItem, GalleryViewMode } from '@/types/gallery';
-import { useGalleryDateNavigation } from '@/hooks/use-gallery-date-navigation';
 
 interface GalleryProps {
   title: string;
@@ -33,7 +32,6 @@ interface GalleryProps {
   gap?: number;
   mobileViewMode?: GalleryViewMode;
   onToggleFullView?: () => void;
-  dates?: number[]; // Ajout des timestamps
 }
 
 const Gallery: React.FC<GalleryProps> = ({
@@ -53,14 +51,12 @@ const Gallery: React.FC<GalleryProps> = ({
   onToggleSidebar,
   gap = 8,
   mobileViewMode,
-  onToggleFullView,
-  dates
+  onToggleFullView
 }) => {
   const [mediaInfoMap, setMediaInfoMap] = useState<Map<string, DetailedMediaInfo | null>>(new Map());
   const { t } = useLanguage();
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<any>(null);
   
   const selection = useGallerySelection({
     mediaIds,
@@ -77,9 +73,6 @@ const Gallery: React.FC<GalleryProps> = ({
     selectedIds,
     position
   );
-  
-  // Utiliser le hook de navigation par date
-  const dateNavigation = useGalleryDateNavigation(mediaIds, dates, gridRef);
 
   const updateMediaInfo = useCallback((id: string, info: DetailedMediaInfo | null) => {
     setMediaInfoMap(prev => {
@@ -136,15 +129,6 @@ const Gallery: React.FC<GalleryProps> = ({
         onToggleSelectionMode={selection.toggleSelectionMode}
         mobileViewMode={mobileViewMode}
         onToggleFullView={onToggleFullView}
-        // Intégration des props de navigation par date
-        periods={dateNavigation.periods}
-        currentPeriod={dateNavigation.currentPeriod}
-        onSelectPeriod={dateNavigation.navigateToPeriod}
-        onPreviousPeriod={dateNavigation.navigateToPrevious}
-        onNextPeriod={dateNavigation.navigateToNext}
-        canNavigatePrevious={dateNavigation.canNavigatePrevious}
-        canNavigateNext={dateNavigation.canNavigateNext}
-        hasDateData={dateNavigation.hasDateData}
       />
       
       <div className="flex-1 overflow-hidden relative scrollbar-vertical">
@@ -167,7 +151,6 @@ const Gallery: React.FC<GalleryProps> = ({
           <GalleryEmptyState />
         ) : (
           <VirtualizedGalleryGrid
-            ref={gridRef}
             mediaIds={mediaIds}
             selectedIds={selectedIds}
             onSelectId={selection.handleSelectItem}

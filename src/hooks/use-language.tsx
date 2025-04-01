@@ -41,12 +41,7 @@ const translations = {
     delete_confirmation_description: 'This will permanently delete the selected media. This action cannot be undone.',
     deleting: 'Deleting...',
     noMediaFound: 'No media found',
-    errorLoadingMedia: 'Error loading media',
-    // Added new translations for date navigation
-    jump_to: 'Jump to',
-    no_dates_available: 'No dates available',
-    previous: 'Previous',
-    next: 'Next'
+    errorLoadingMedia: 'Error loading media'
   },
   fr: {
     selected: 'sélectionné(s)',
@@ -83,12 +78,7 @@ const translations = {
     delete_confirmation_description: 'Cette action supprimera définitivement les médias sélectionnés. Cette action est irréversible.',
     deleting: 'Suppression...',
     noMediaFound: 'Aucun média trouvé',
-    errorLoadingMedia: 'Erreur lors du chargement des médias',
-    // Added new translations for date navigation
-    jump_to: 'Aller à',
-    no_dates_available: 'Aucune date disponible',
-    previous: 'Précédent',
-    next: 'Suivant'
+    errorLoadingMedia: 'Erreur lors du chargement des médias'
   }
 };
 
