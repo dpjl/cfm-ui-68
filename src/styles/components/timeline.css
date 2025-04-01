@@ -1,20 +1,21 @@
 
 /* Timeline Component Styles */
 @layer components {
-  /* Container principal */
+  /* Container principal - Position absolue par rapport au conteneur de la grille */
   .gallery-timeline-container {
-    @apply absolute bottom-1 left-0 right-0 z-10 flex items-center justify-center;
-    transition: opacity 0.3s ease;
+    @apply absolute bottom-2 left-0 right-0 z-50 flex items-center justify-center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto;
   }
   
   /* Styles spécifiques pour la timeline de gauche */
   .timeline-left {
-    @apply left-2 right-auto;
+    @apply left-2 right-auto justify-start;
   }
   
   /* Styles spécifiques pour la timeline de droite */
   .timeline-right {
-    @apply left-auto right-2;
+    @apply left-auto right-2 justify-end;
   }
   
   /* Version compacte pour les modes split ou mobile */
@@ -24,15 +25,30 @@
   
   /* Bouton toggle */
   .timeline-toggle-button {
-    @apply h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    @apply h-8 w-8 bg-background/95 backdrop-blur-sm hover:bg-background;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  /* État désactivé */
+  .timeline-toggle-button[disabled] {
+    @apply opacity-50 cursor-not-allowed;
   }
   
   /* Wrapper pour la timeline */
   .timeline-wrapper {
-    @apply absolute bottom-9 flex items-center bg-background/80 backdrop-blur-sm rounded-md overflow-hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    @apply absolute bottom-9 flex items-center bg-background/95 backdrop-blur-sm rounded-md overflow-hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     max-width: calc(100% - 1rem);
+  }
+  
+  /* Timeline de gauche */
+  .timeline-left .timeline-wrapper {
+    @apply left-0;
+  }
+  
+  /* Timeline de droite */
+  .timeline-right .timeline-wrapper {
+    @apply right-0;
   }
   
   /* Zone scrollable */

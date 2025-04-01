@@ -1,5 +1,4 @@
-
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Button } from '../ui/button';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,8 +7,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useIsMobile } from '@/hooks/use-breakpoint';
 
 interface GalleryTimelineProps {
-  timelineEntries: any[];
-  onJumpToDate: (entry: any) => void;
+  timelineEntries: TimelineEntry[];
+  onJumpToDate: (entry: TimelineEntry) => void;
   position: 'source' | 'destination';
   viewMode?: 'single' | 'split';
 }
@@ -28,12 +27,16 @@ const GalleryTimeline: React.FC<GalleryTimelineProps> = ({
   const isMobile = useIsMobile();
   const isCompact = viewMode === 'split' || isMobile;
   
-  // Basculer l'affichage de la timeline
+  useEffect(() => {
+    console.log(`[GalleryTimeline ${position}] Entries:`, timelineEntries.length, 
+      timelineEntries.length > 0 ? timelineEntries[0].label : '(empty)');
+  }, [timelineEntries, position]);
+  
   const toggleTimeline = useCallback(() => {
     setShowTimeline(prev => !prev);
-  }, []);
+    console.log(`[GalleryTimeline ${position}] Toggle timeline:`, !showTimeline);
+  }, [showTimeline, position]);
   
-  // Gérer le scroll de la timeline avec les boutons de navigation
   const handleScroll = useCallback((direction: 'left' | 'right') => {
     if (!timelineRef.current) return;
     
@@ -44,14 +47,12 @@ const GalleryTimeline: React.FC<GalleryTimelineProps> = ({
     });
   }, []);
   
-  // Gérer le début du glissement tactile
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     dragStartXRef.current = e.touches[0].clientX;
     lastTouchXRef.current = e.touches[0].clientX;
     setIsDragging(true);
   }, []);
   
-  // Gérer le glissement tactile
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging || !timelineRef.current || lastTouchXRef.current === null) return;
     
@@ -64,17 +65,14 @@ const GalleryTimeline: React.FC<GalleryTimelineProps> = ({
     e.preventDefault(); // Empêcher le défilement de la page
   }, [isDragging]);
   
-  // Gérer la fin du glissement tactile
   const handleTouchEnd = useCallback(() => {
     dragStartXRef.current = null;
     lastTouchXRef.current = null;
     setIsDragging(false);
   }, []);
   
-  // Si aucune entrée de timeline, ne rien afficher
-  if (timelineEntries.length === 0) return null;
+  const hasEntries = timelineEntries.length > 0;
   
-  // Classes pour le conteneur principal basées sur la position et le mode de vue
   const containerClasses = `gallery-timeline-container ${position === 'source' ? 'timeline-left' : 'timeline-right'} ${
     isCompact ? 'timeline-compact' : ''
   }`;
@@ -89,17 +87,18 @@ const GalleryTimeline: React.FC<GalleryTimelineProps> = ({
               size="icon"
               className="timeline-toggle-button"
               onClick={toggleTimeline}
+              disabled={!hasEntries}
             >
               <CalendarDays size={isMobile ? 16 : 20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p>Timeline</p>
+            <p>{hasEntries ? 'Timeline' : 'No timeline data available'}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       
-      {showTimeline && (
+      {showTimeline && hasEntries && (
         <div className="timeline-wrapper">
           <Button
             variant="ghost"

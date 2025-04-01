@@ -25,48 +25,72 @@ export function useMediaTimeline(
   
   // Créer l'index de timeline basé sur les dates des médias
   const timelineEntries = useMemo(() => {
-    if (!mediaWithDates || mediaWithDates.length === 0) return [];
+    if (!mediaWithDates || mediaWithDates.length === 0) {
+      console.log('No media with dates available for timeline');
+      return [];
+    }
 
     const entries: TimelineEntry[] = [];
     const dateMap = new Map<string, number>();
 
     // Parcourir tous les médias pour extraire leurs dates et positions
     mediaWithDates.forEach((item, index) => {
-      if (!item.createdAt) return;
+      if (!item.createdAt) {
+        console.log(`Media item at index ${index} has no date`);
+        return;
+      }
       
-      const date = new Date(item.createdAt);
-      // Formater la date en format YYYY-MM (pour regrouper par mois)
-      const monthKey = date.toISOString().substring(0, 7);
-      
-      // Si c'est le premier média de ce mois, enregistrer son index
-      if (!dateMap.has(monthKey)) {
-        dateMap.set(monthKey, index);
+      try {
+        const date = new Date(item.createdAt);
+        if (isNaN(date.getTime())) {
+          console.log(`Invalid date format for item at index ${index}: ${item.createdAt}`);
+          return;
+        }
         
-        // Formater le libellé du mois (ex: "Jan 2023")
-        const label = date.toLocaleDateString(undefined, { 
-          month: 'short', 
-          year: 'numeric' 
-        });
+        // Formater la date en format YYYY-MM (pour regrouper par mois)
+        const monthKey = date.toISOString().substring(0, 7);
         
-        entries.push({
-          label,
-          fullDate: date.toISOString(),
-          firstIndex: index,
-        });
+        // Si c'est le premier média de ce mois, enregistrer son index
+        if (!dateMap.has(monthKey)) {
+          dateMap.set(monthKey, index);
+          
+          // Formater le libellé du mois (ex: "Jan 2023")
+          const label = date.toLocaleDateString(undefined, { 
+            month: 'short', 
+            year: 'numeric' 
+          });
+          
+          entries.push({
+            label,
+            fullDate: date.toISOString(),
+            firstIndex: index,
+          });
+        }
+      } catch (error) {
+        console.error('Error processing date for timeline:', error);
       }
     });
 
-    return entries.sort((a, b) => 
-      new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()
+    // Tri chronologique inversé (plus récents d'abord)
+    const sortedEntries = entries.sort((a, b) => 
+      new Date(b.fullDate).getTime() - new Date(a.fullDate).getTime()
     );
+    
+    console.log(`Generated ${sortedEntries.length} timeline entries from ${mediaWithDates.length} media items`);
+    return sortedEntries;
   }, [mediaWithDates]);
 
   // Fonction pour sauter à une entrée spécifique de la timeline
   const jumpToDate = (entry: TimelineEntry) => {
-    if (!gridRef.current) return;
+    if (!gridRef.current) {
+      console.log('Grid reference not available for timeline navigation');
+      return;
+    }
     
     // Calculer la rangée basée sur l'index et le nombre de colonnes
     const row = Math.floor(entry.firstIndex / columnsCount);
+    
+    console.log(`Jumping to date ${entry.label}, index ${entry.firstIndex}, row ${row}`);
     
     // Faire défiler la grille jusqu'à cette rangée
     gridRef.current.scrollToItem({

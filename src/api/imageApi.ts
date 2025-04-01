@@ -175,10 +175,22 @@ export async function fetchMediaWithDates(directory: string, position: 'source' 
     const data: MediaListResponse = await response.json();
     console.log("Received media items with optimized format:", data);
     
+    // Vérifier que nous avons bien les deux listes parallèles ids et dates
+    if (!data.ids || !data.dates || data.ids.length !== data.dates.length) {
+      console.error("Invalid data format from server. Expected parallel arrays for ids and dates.");
+      throw new Error("Invalid data format from server");
+    }
+    
     const mediaWithDates: MediaItemWithDate[] = data.ids.map((id, index) => {
       const timestamp = data.dates[index];
       const createdAt = new Date(timestamp * 1000).toISOString();
       return { id, createdAt };
+    });
+    
+    // Tri par ordre chronologique inverse (plus récents d'abord)
+    mediaWithDates.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
     
     return mediaWithDates;
@@ -187,14 +199,20 @@ export async function fetchMediaWithDates(directory: string, position: 'source' 
     
     const mockCount = 200 + Math.floor(Math.random() * 20);
     const prefix = `${position}-${directory}-${filter === 'all' ? '' : filter + '-'}`;
-    const threeDaysPerItem = 1095 / mockCount;
+    
+    // Générer des dates sur 3 ans pour avoir une timeline intéressante
+    const now = Date.now();
+    const threeYearsAgo = now - (3 * 365 * 24 * 60 * 60 * 1000);
+    const timeRange = now - threeYearsAgo;
     
     const mockMediaWithDates: MediaItemWithDate[] = [];
     
+    // Créer des médias avec des dates sur les 3 dernières années
     const imageCount = Math.floor(mockCount * 0.8);
     for (let i = 0; i < imageCount; i++) {
-      const daysAgo = Math.floor(i * threeDaysPerItem) + Math.floor(Math.random() * 10);
-      const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+      // Répartir les dates plus uniformément dans une fenêtre de 3 ans
+      const randomTimestamp = threeYearsAgo + Math.random() * timeRange;
+      const createdAt = new Date(randomTimestamp).toISOString();
       mockMediaWithDates.push({
         id: `${prefix}img-${i + 1000}`,
         createdAt
@@ -203,17 +221,21 @@ export async function fetchMediaWithDates(directory: string, position: 'source' 
     
     const videoCount = mockCount - imageCount;
     for (let i = 0; i < videoCount; i++) {
-      const daysAgo = Math.floor(i * threeDaysPerItem) + Math.floor(Math.random() * 10);
-      const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+      const randomTimestamp = threeYearsAgo + Math.random() * timeRange;
+      const createdAt = new Date(randomTimestamp).toISOString();
       mockMediaWithDates.push({
         id: `${prefix}vid-${i + 2000}`,
         createdAt
       });
     }
     
-    mockMediaWithDates.sort(() => Math.random() - 0.5);
+    // Trier par date décroissante (plus récents d'abord)
+    mockMediaWithDates.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
     
-    console.log(`Generated ${mockMediaWithDates.length} mock media items with dates`);
+    console.log(`Generated ${mockMediaWithDates.length} mock media items with dates in reverse chronological order`);
     return mockMediaWithDates;
   }
 }

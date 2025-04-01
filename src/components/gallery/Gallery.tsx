@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { useLanguage } from '@/hooks/use-language';
 import VirtualizedGalleryGrid from './VirtualizedGalleryGrid';
@@ -62,16 +61,14 @@ const Gallery: React.FC<GalleryProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<any>(null);
   
-  // Récupérer les dates des médias
   const { mediaWithDates } = useMediaWithDates(
-    mediaIds.length > 0 ? 'current' : '', // Utiliser une valeur factice pour éviter des requêtes inutiles
+    filter,
     position,
     filter
   );
   
-  // Créer une version avec dates en utilisant les mediaIds actuels
   const mediaIdsWithDates = React.useMemo(() => {
-    return mediaIds.map((id, index) => {
+    return mediaIds.map((id) => {
       const existingItem = mediaWithDates.find(item => item.id === id);
       return {
         id,
@@ -80,12 +77,20 @@ const Gallery: React.FC<GalleryProps> = ({
     });
   }, [mediaIds, mediaWithDates]);
   
-  // Utiliser le hook de timeline
+  React.useEffect(() => {
+    console.log(`[Gallery ${position}] MediaIdsWithDates:`, mediaIdsWithDates.length, 
+      mediaIdsWithDates.length > 0 ? mediaIdsWithDates[0] : '(empty)');
+  }, [mediaIdsWithDates, position]);
+  
   const { timelineEntries, jumpToDate } = useMediaTimeline(
     mediaIdsWithDates,
     columnsCount,
     gridRef
   );
+  
+  React.useEffect(() => {
+    console.log(`[Gallery ${position}] Timeline entries:`, timelineEntries.length);
+  }, [timelineEntries, position]);
   
   const selection = useGallerySelection({
     mediaIds,
@@ -192,7 +197,6 @@ const Gallery: React.FC<GalleryProps> = ({
               gap={gap}
             />
             
-            {/* Timeline de la galerie */}
             <GalleryTimeline
               timelineEntries={timelineEntries}
               onJumpToDate={jumpToDate}
