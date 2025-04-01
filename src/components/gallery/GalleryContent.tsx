@@ -20,7 +20,7 @@ interface GalleryContentProps {
   position?: 'source' | 'destination';
   onToggleSidebar?: () => void;
   onColumnsChange?: (count: number) => void;
-  // Nouvelles props pour le toggle de vue
+  // Props for view toggle
   mobileViewMode?: GalleryViewMode;
   onToggleFullView?: () => void;
 }
@@ -46,7 +46,7 @@ const GalleryContent: React.FC<GalleryContentProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Déterminer les limites de colonnes en fonction du mode vue
+  // Determine column limits based on view mode
   const getColumnLimits = () => {
     const isSplitView = viewMode === 'split';
     if (position === 'source') {
@@ -62,7 +62,7 @@ const GalleryContent: React.FC<GalleryContentProps> = ({
   
   const { min: minColumns, max: maxColumns } = getColumnLimits();
   
-  // Utiliser le hook de zoom si onColumnsChange est fourni
+  // Use the zoom hook if onColumnsChange is provided
   if (onColumnsChange) {
     useGalleryZoom(containerRef, {
       minColumns,

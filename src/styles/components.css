@@ -1,2 +1,9 @@
 
 @tailwind components;
+
+/* Import component-specific styles */
+@import './components/glass-effects.css';
+@import './components/image-card.css';
+@import './components/transitions.css';
+@import './components/responsive.css';
+@import './components/scrollbars.css';
