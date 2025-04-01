@@ -1,5 +1,5 @@
 
-import { MediaItem } from '@/types/gallery';
+import { MediaItem, MediaItemWithDate } from '@/types/gallery';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -141,10 +141,11 @@ export async function fetchMediaIds(directory: string, position: 'source' | 'des
       throw new Error(`Failed to fetch media IDs: ${response.status} ${response.statusText}`);
     }
     
-    const data = await response.json();
-    console.log("Received media IDs:", data);
+    const data: MediaItemWithDate[] = await response.json();
+    console.log("Received media items with dates:", data);
     
-    return data;
+    // Extract only the IDs to maintain backward compatibility
+    return data.map(item => item.id);
   } catch (error) {
     console.error("Error fetching media IDs:", error);
     
@@ -173,6 +174,65 @@ export async function fetchMediaIds(directory: string, position: 'source' | 'des
     
     console.log(`Generated ${mockMediaIds.length} mock media IDs with directory ${directory}`);
     return mockMediaIds;
+  }
+}
+
+// Nouvelle fonction pour obtenir les médias avec leurs dates
+export async function fetchMediaWithDates(directory: string, position: 'source' | 'destination', filter: string = 'all'): Promise<MediaItemWithDate[]> {
+  const url = `${API_BASE_URL}/list?directory=${encodeURIComponent(position)}&folder=${encodeURIComponent(directory)}${filter !== 'all' ? `&filter=${filter}` : ''}`;
+  console.log("Fetching media with dates from:", url);
+  
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Server responded with error:", response.status, errorText);
+      throw new Error(`Failed to fetch media with dates: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: MediaItemWithDate[] = await response.json();
+    console.log("Received media items with dates:", data);
+    
+    return data;
+  } catch (error) {
+    console.error("Error fetching media with dates:", error);
+    
+    // Même logique de mock que fetchMediaIds mais avec des dates
+    const mockCount = 200 + Math.floor(Math.random() * 20);
+    const prefix = `${position}-${directory}-${filter === 'all' ? '' : filter + '-'}`;
+    const threeDaysPerItem = 1095 / mockCount; // Distribuer les dates sur 3 ans
+    
+    // Générer des médias avec dates
+    const mockMediaWithDates: MediaItemWithDate[] = [];
+    
+    // Dates pour les images (80% du total)
+    const imageCount = Math.floor(mockCount * 0.8);
+    for (let i = 0; i < imageCount; i++) {
+      const daysAgo = Math.floor(i * threeDaysPerItem) + Math.floor(Math.random() * 10);
+      const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+      mockMediaWithDates.push({
+        id: `${prefix}img-${i + 1000}`,
+        createdAt
+      });
+    }
+    
+    // Dates pour les vidéos (20% du total)
+    const videoCount = mockCount - imageCount;
+    for (let i = 0; i < videoCount; i++) {
+      const daysAgo = Math.floor(i * threeDaysPerItem) + Math.floor(Math.random() * 10);
+      const createdAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+      mockMediaWithDates.push({
+        id: `${prefix}vid-${i + 2000}`,
+        createdAt
+      });
+    }
+    
+    // Mélanger les résultats
+    mockMediaWithDates.sort(() => Math.random() - 0.5);
+    
+    console.log(`Generated ${mockMediaWithDates.length} mock media items with dates`);
+    return mockMediaWithDates;
   }
 }
 

@@ -16,6 +16,7 @@ interface GalleryGridCellProps {
     columnsCount: number;
     gap: number;
     calculateCellStyle: (style: React.CSSProperties, columnIndex: number) => React.CSSProperties;
+    mediaDates?: Record<string, string>; // Optional mapping of media IDs to their creation dates
   };
 }
 

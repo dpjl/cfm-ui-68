@@ -1,6 +1,8 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FixedSizeGrid } from 'react-window';
+import { MediaItemWithDate } from '@/types/gallery';
+import { fetchMediaWithDates } from '@/api/imageApi';
 
 /**
  * Hook pour gérer le suivi des médias dans la galerie et leur affichage
@@ -27,4 +29,74 @@ export function useGalleryMediaTracking(
       gridRef.current.scrollTo({ scrollTop: 0 });
     }
   }, [mediaIds, gridRef]);
+}
+
+/**
+ * Hook pour récupérer les médias avec leurs dates de création
+ * Cette fonction est destinée à être utilisée pour implémenter des fonctionnalités 
+ * de navigation basées sur les dates ultérieurement
+ */
+export function useMediaWithDates(
+  directory: string,
+  position: 'source' | 'destination',
+  filter: string = 'all'
+) {
+  const [mediaWithDates, setMediaWithDates] = useState<MediaItemWithDate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function loadMediaWithDates() {
+      if (!directory) return;
+      
+      setLoading(true);
+      try {
+        const data = await fetchMediaWithDates(directory, position, filter);
+        if (isMounted) {
+          setMediaWithDates(data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching media with dates:', err);
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error('Failed to fetch media with dates'));
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+    
+    loadMediaWithDates();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [directory, position, filter]);
+
+  return {
+    mediaWithDates,
+    loading,
+    error,
+    // Fonction utilitaire pour obtenir les dates uniques (pour une future implémentation de navigateur de dates)
+    getUniqueDates: (): string[] => {
+      const dates = mediaWithDates
+        .filter(item => item.createdAt)
+        .map(item => {
+          const date = new Date(item.createdAt as string);
+          return date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        });
+      
+      return [...new Set(dates)].sort();
+    },
+    // Fonction pour obtenir les médias d'une date spécifique
+    getMediaForDate: (date: string): string[] => {
+      return mediaWithDates
+        .filter(item => item.createdAt && item.createdAt.startsWith(date))
+        .map(item => item.id);
+    }
+  };
 }
