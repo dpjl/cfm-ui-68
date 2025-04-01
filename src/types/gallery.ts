@@ -37,7 +37,7 @@ export type TranslationKey =
   | 'desktop_columns' | 'desktop_single_columns' | 'split_columns' | 'single_columns'
   | 'delete_confirmation_title' | 'delete_confirmation_description' | 'deleting'
   | 'select_all' | 'deselect_all' | 'hide_dates' | 'show_dates' | 'selected' | 'refresh' | 'delete'
-  | 'jump_to' | 'no_dates_available' | 'previous' | 'next';
+  | 'jump_to' | 'no_dates_available' | 'previous' | 'next' | 'errorLoadingMedia';
 
 // Nouveau type pour représenter une période (mois/année)
 export interface DatePeriod {

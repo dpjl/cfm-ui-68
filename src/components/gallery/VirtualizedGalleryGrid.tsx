@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, forwardRef } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { DetailedMediaInfo } from '@/api/imageApi';
@@ -28,7 +28,7 @@ interface VirtualizedGalleryGridProps {
  * A virtualized grid component that efficiently renders large collections of media items
  * With improved dimension calculations to prevent gaps
  */
-const VirtualizedGalleryGrid = memo(({
+const VirtualizedGalleryGrid = forwardRef<any, VirtualizedGalleryGridProps>(({
   mediaIds,
   selectedIds,
   onSelectId,
@@ -38,16 +38,15 @@ const VirtualizedGalleryGrid = memo(({
   updateMediaInfo,
   position = 'source',
   gap = 8 // Valeur par défaut
-}: VirtualizedGalleryGridProps) => {
+}, ref) => {
   // Use custom hook for grid management
   const {
-    gridRef,
     gridKey,
     scrollPositionRef
   } = useGalleryGrid();
   
   // Use hook for tracking media changes to optimize rendering
-  useGalleryMediaTracking(mediaIds, gridRef);
+  useGalleryMediaTracking(mediaIds, ref ? ref : { current: null });
   
   // Calculate the number of rows based on media and columns
   const rowCount = calculateRowCount(mediaIds.length, columnsCount);
@@ -96,7 +95,7 @@ const VirtualizedGalleryGrid = memo(({
           
           return (
             <FixedSizeGrid
-              ref={gridRef}
+              ref={ref}
               columnCount={columnsCount}
               columnWidth={columnWidth}
               height={height}
